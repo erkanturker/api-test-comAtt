@@ -2,20 +2,23 @@ import { test, expect, request } from "@playwright/test";
 
 test.describe("GET /user", () => {
   test("it shoold get all users by admin", async ({ request }) => {
-    const respToken = await request.post(
-      "https://comatt.onrender.com/auth/token",
-      {
-        data: {
-          username: "erkanturker",
-          password: "12345",
-        },
-      }
-    );
+    type user = {
+      username: string;
+      password: string;
+    };
+    const adminCred: user = JSON.parse(process.env.ADMMIN_CREDENTIALS!);
+
+    const respToken = await request.post(`/auth/token`, {
+      data: {
+        username: adminCred.username,
+        password: adminCred.password,
+      },
+    });
 
     const token = await respToken.json();
     console.log(token.token);
 
-    const respUser = await request.get("https://comatt.onrender.com/users", {
+    const respUser = await request.get("/users", {
       headers: {
         authorization: token.token,
       },
