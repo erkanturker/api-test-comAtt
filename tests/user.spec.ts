@@ -1,30 +1,60 @@
-import { test, expect, request } from "@playwright/test";
+import {
+  test,
+  expect,
+  request as baseRequest,
+  APIRequestContext,
+} from "@playwright/test";
+import { getAdminToken, getTeacherToken } from "../utils/tokenGenerator";
+import User from "../types/user";
+import exp from "constants";
+
+let request: APIRequestContext;
+let adminToken: string;
+let teacherToken: string;
+let users: User[];
+
+test.beforeAll(async () => {
+  request = await baseRequest.newContext();
+  adminToken = await getAdminToken();
+  teacherToken = await getTeacherToken();
+});
 
 test.describe("GET /user", () => {
-  test("it shoold get all users by admin", async ({ request }) => {
-    type user = {
-      username: string;
-      password: string;
-    };
-    const adminCred: user = JSON.parse(process.env.ADMMIN_CREDENTIALS!);
-
-    const respToken = await request.post(`/auth/token`, {
-      data: {
-        username: adminCred.username,
-        password: adminCred.password,
-      },
-    });
-
-    const token = await respToken.json();
-    console.log(token.token);
-
+  test("it shoold get all users by admin", async () => {
     const respUser = await request.get("/users", {
       headers: {
-        authorization: token.token,
+        authorization: `Bearer ${adminToken}`,
       },
     });
 
+    users = await respUser.json();
+
+    expect(users[0]).toHaveProperty("username");
+  });
+
+  test("should NOT get  users by teacher", async () => {
+    const respUser = await request.get("/users", {
+      headers: {
+        authorization: `Bearer ${teacherToken}`,
+      },
+    });
+
+    expect(respUser.status()).toBe(401);
+  });
+});
+
+test.describe("GET /users/id", () => {
+  test("should get user by username", async () => {
+   
+    const respUser = await request.get(`/users/${users[0].username}`, {
+      headers: {
+        authorization: `Bearer ${adminToken}`,
+      },
+    });
+
+    const user: User = await respUser.json();
+
     expect(respUser.status()).toBe(200);
-    console.log(await respUser.json());
+    expect(user).toEqual(users[0]);
   });
 });
