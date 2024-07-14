@@ -1,12 +1,11 @@
 import {
-  test,
-  expect,
-  request as baseRequest,
   APIRequestContext,
+  request as baseRequest,
+  expect,
+  test,
 } from "@playwright/test";
-import { getAdminToken, getTeacherToken } from "../utils/tokenGenerator";
 import User from "../types/user";
-import exp from "constants";
+import { getAdminToken, getTeacherToken } from "../utils/tokenGenerator";
 
 let request: APIRequestContext;
 let adminToken: string;
@@ -45,7 +44,6 @@ test.describe("GET /user", () => {
 
 test.describe("GET /users/id", () => {
   test("should get user by username", async () => {
-   
     const respUser = await request.get(`/users/${users[0].username}`, {
       headers: {
         authorization: `Bearer ${adminToken}`,
